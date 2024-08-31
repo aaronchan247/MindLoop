@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<head>
+  <title>MindLoop</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="test.css" />
+</head>
+<body>
+  <h1>My Knowledge Map</h1>
+  <div id="container">
+    <svg></svg>
+  </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script type="module">
+  const svg = d3.select("svg");
+
+  // Global variable
+  let currentCircle = null;
+  let currentText = null;
+
+  document
+    .getElementById("container")
+    .addEventListener("contextmenu", createCircle);
+
+  function createCircle() {
+    event.preventDefault(); //prevent the default menu pop up
+    const [x, y] = d3.pointer(event, this); // find the current mouse position
+
+    // Add the circle with properties
+    const circle = svg
+      .append("circle")
+      .attr("cx", x)
+      .attr("cy", y)
+      .attr("r", 60)
+      .attr("fill", "white")
+      .attr("stroke", "black")
+      .attr("stroke-width", 2)
+      .attr("class", "circle");
+
+    // Add initial text
+    const text = svg
+      .append("text")
+      .attr("x", x)
+      .attr("y", y)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("font-size", "14px")
+      .attr("font-family", "Roboto")
+      .text("");
+
+    // Drag and drop function
+    const drag = d3
+      .drag()
+      .on("start", function (event) {
+        currentCircle = circle;
+        currentText = text;
+        currentCircle.attr("stroke", "red");
+      })
+      .on("drag", function (event) {
+        if (currentCircle) {
+          currentCircle.attr("cx", event.x).attr("cy", event.y);
+        }
+        if (currentText) {
+          currentText.attr("x", event.x).attr("y", event.y);
+        }
+      })
+      .on("end", function (event) {
+        currentCircle.attr("stroke", "black");
+        currentCircle = null;
+        currentText = null;
+      });
+
+    circle.call(drag);
+    text.call(drag);
+
+    // Create an input box in the middle of the screen
+    const input = d3
+      .select("#container")
+      .append("input")
+      .attr("class", "text-input")
+      .style("left", "50%")
+      .style("rightt", "50%")
+
+      .on("keydown", function (event) {
+        if (event.key === "Enter") {
+          const userInput = this.value;
+          d3.select(this).remove();
+          text.text(userInput);
+        }
+      });
+    // Auto focus on the input field
+    input.node().focus();
+  }
+</script>
